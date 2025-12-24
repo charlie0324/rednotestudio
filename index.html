@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>查理的写作台 | Note Studio</title>
+    <title>查理的小红书写作台 | Red Note Studio</title>
     <!-- 引入 Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,7 +12,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class', 
+            darkMode: 'class', // 手动控制暗黑模式
             theme: {
                 extend: {
                     colors: {
@@ -22,21 +22,39 @@
                             light: 'var(--color-primary-light)',
                             bg: 'var(--color-primary-bg)'
                         },
+                        // 语义化背景色
                         base: 'var(--bg-main)',       
                         surface: 'var(--bg-surface)', 
                         'surface-hover': 'var(--bg-surface-hover)',
+                        
+                        // 语义化文字色
                         content: 'var(--text-main)',  
                         muted: 'var(--text-muted)',   
-                        title: 'var(--text-title-force)',
+                        title: 'var(--text-title-force)', // 强制标题色
+                        
                         gray: {
-                            50: '#f9fafb', 100: '#f3f4f6', 200: 'var(--color-border)', 300: '#d1d5db', 400: '#9ca3af', 500: '#6b7280', 600: '#4b5563', 700: '#374151', 800: '#1f2937',
+                            50: '#f9fafb',
+                            100: '#f3f4f6',
+                            200: 'var(--color-border)', 
+                            300: '#d1d5db',
+                            400: '#9ca3af',
+                            500: '#6b7280',
+                            600: '#4b5563',
+                            700: '#374151',
+                            800: '#1f2937',
                         }
                     },
                     borderRadius: {
-                        'none': '0', DEFAULT: 'var(--radius)', 'md': 'var(--radius)', 'lg': 'var(--radius)', 'xl': 'calc(var(--radius) + 4px)', '2xl': 'calc(var(--radius) + 8px)',
+                        'none': '0',
+                        DEFAULT: 'var(--radius)',
+                        'md': 'var(--radius)',
+                        'lg': 'var(--radius)',
+                        'xl': 'calc(var(--radius) + 4px)',
+                        '2xl': 'calc(var(--radius) + 8px)',
                     },
                     boxShadow: {
-                        'card': 'var(--shadow-card)', 'card-hover': 'var(--shadow-card-hover)',
+                        'card': 'var(--shadow-card)',
+                        'card-hover': 'var(--shadow-card-hover)',
                     },
                     fontFamily: {
                         sans: ['var(--font-main)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
@@ -47,16 +65,22 @@
         }
     </script>
     <style>
+        /* CSS 变量定义 */
         :root {
+            /* 主题色 */
             --color-primary: #ff2442;
             --color-primary-hover: #e0203a;
             --color-primary-light: #ffe6e9;
             --color-primary-bg: #fff0f2;
+            
+            /* 材质 */
             --radius: 12px;
             --border-width: 1px;
             --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
             --shadow-card: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
             --shadow-card-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+
+            /* 亮色模式基础色 */
             --bg-main: #f9fafb;
             --bg-surface: #ffffff;
             --bg-surface-hover: #f3f4f6;
@@ -65,39 +89,82 @@
             --text-muted: #4b5563;
             --color-border: #e5e7eb;
         }
-        .theme-pixel { --font-main: 'DotGothic16', 'VT323', monospace; letter-spacing: 0.5px; }
+
+        /* 像素风覆盖 */
+        .theme-pixel {
+            --font-main: 'DotGothic16', 'VT323', monospace; 
+            letter-spacing: 0.5px;
+        }
+
+        /* 滚动条 */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: var(--radius); }
         ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+        
+        /* 拖拽 */
         .dragging { opacity: 0.5; transform: scale(0.98); }
         .drag-over { background-color: var(--color-primary-light) !important; border-color: var(--color-primary) !important; box-shadow: inset 0 0 0 2px var(--color-primary); }
         .drag-over-editor { background-color: var(--color-primary-bg) !important; box-shadow: inset 0 0 0 2px var(--color-primary) !important; }
+        
         .main-editor:empty:before { content: attr(placeholder); color: var(--text-muted); pointer-events: none; display: block; }
+
+        /* 动画 */
         .save-indicator { animation: fadeOut 2.5s forwards; }
         @keyframes fadeOut { 0% { opacity: 1; transform: translateY(0); } 80% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-10px); } }
+        
         .modal-enter { animation: modalIn 0.2s ease-out forwards; }
         @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        /* 链接 */
         .linkified { color: var(--color-primary); text-decoration: underline; text-underline-offset: 2px; }
         .linkified:hover { opacity: 0.8; }
+        
+        /* 录音波纹动画 */
         .recording-pulse { animation: pulse-red 1.5s infinite; }
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(255, 36, 66, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(255, 36, 66, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 36, 66, 0); } }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(255, 36, 66, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 36, 66, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 36, 66, 0); }
+        }
+
+        /* 视频容器 (去掉了黑色背景) */
         .video-embed-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; border-radius: 8px; margin: 8px 0; background: transparent; }
         .video-embed-container iframe, .video-embed-container video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
-        .voice-message { display: inline-flex; align-items: center; gap: 8px; background-color: var(--color-primary-light); padding: 6px 12px; border-radius: 18px; border: 1px solid var(--color-primary); cursor: pointer; margin-bottom: 8px; transition: all 0.2s; max-width: 100%; }
-        .voice-message:hover { opacity: 0.9; transform: scale(1.02); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .voice-icon { color: var(--color-primary); }
-        
-        /* 热力图 & 统计图表样式 */
-        .heatmap-container { display: flex; gap: 3px; overflow-x: auto; padding-bottom: 5px; }
-        .heatmap-week { display: flex; flex-direction: column; gap: 3px; }
-        .heatmap-cell { width: 12px; height: 12px; border-radius: 2px; background-color: var(--color-border); transition: all 0.2s; }
-        .heatmap-cell:hover { transform: scale(1.3); z-index: 10; border: 1px solid rgba(0,0,0,0.1); }
-        
-        .chart-bar-container { display: flex; align-items: flex-end; justify-content: space-between; height: 100px; gap: 10px; padding-top: 20px; }
-        .chart-bar-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .chart-bar { width: 100%; background-color: var(--color-primary); border-radius: 4px 4px 0 0; opacity: 0.8; transition: height 0.5s ease; min-height: 4px; }
-        .chart-label { font-size: 10px; color: var(--text-muted); }
+
+        /* 热力图 Grid */
+        .heatmap-grid {
+            display: grid;
+            grid-template-rows: repeat(7, 1fr);
+            grid-auto-flow: column;
+            gap: 3px;
+        }
+        .heatmap-cell {
+            width: 10px; height: 10px; border-radius: 2px;
+        }
+
+        /* 语音条样式 */
+        .voice-message {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: var(--color-primary-light);
+            padding: 6px 12px;
+            border-radius: 18px;
+            border: 1px solid var(--color-primary);
+            cursor: pointer;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+            max-width: 100%;
+        }
+        .voice-message:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .voice-icon {
+            color: var(--color-primary);
+        }
     </style>
 </head>
 <body class="h-screen w-screen overflow-hidden flex bg-base text-content font-sans antialiased transition-colors duration-300">
@@ -112,7 +179,7 @@
     <div class="w-1/5 min-w-[280px] max-w-[340px] flex flex-col border-r border-gray-200 bg-surface/50 shrink-0 z-20 backdrop-blur-md transition-colors">
         <!-- Header -->
         <div class="h-14 flex items-center justify-between px-4 border-b border-gray-200 bg-surface/90 backdrop-blur-sm shrink-0 relative z-30 transition-colors">
-            <span class="font-extrabold text-content flex items-center gap-2 text-base">
+            <span class="font-extrabold text-title flex items-center gap-2 text-base">
                 🚀 灵感中转站
                 <span class="text-xs font-normal text-white bg-primary px-2 py-0.5 rounded-full shadow-sm" id="inboxCount">0</span>
             </span>
@@ -143,7 +210,7 @@
         </div>
 
         <!-- List -->
-        <div class="flex-1 overflow-y-auto p-3 space-y-3 bg-primary-bg/30 transition-colors" id="inboxList" ondragover="allowDrop(event)" ondrop="dropToInbox(event)" ondragleave="leaveDrop(event)"></div>
+        <div class="flex-1 overflow-y-auto p-3 space-y-3 bg-primary-bg/30 transition-colors" id="inboxList" ondragover="allowDrop(event)" ondrop="dropToInbox(event)"></div>
 
         <!-- Input Area with Mic -->
         <div class="p-4 border-t border-gray-200 bg-surface shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)] transition-colors relative">
@@ -156,7 +223,7 @@
         </div>
     </div>
 
-    <!-- 2. 灵感整理库 (Organizer) -->
+    <!-- 2. 大纲整理 (Organizer) -->
     <div class="w-3/10 min-w-[320px] max-w-[450px] flex flex-col border-r border-gray-200 bg-surface shrink-0 z-10 relative transition-colors">
         <div class="h-14 flex items-center justify-between px-4 border-b border-gray-200 bg-surface/95 shrink-0 transition-colors" id="organizerHeader"></div>
         <div class="flex-1 overflow-y-auto flex flex-col bg-base/50 transition-colors" id="organizerBody"></div>
@@ -178,7 +245,7 @@
                 </button>
 
                 <!-- Stats Entry -->
-                <button onclick="showStatsModal()" class="flex items-center justify-center p-2 text-muted hover:text-primary hover:bg-primary-light rounded-lg transition-colors ml-auto" title="数据统计中心">
+                <button onclick="showStatsModal()" class="flex items-center justify-center p-2 text-muted hover:text-primary hover:bg-primary-light rounded-lg transition-colors ml-auto" title="写作统计">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
                 </button>
 
@@ -202,7 +269,7 @@
 
             <div class="flex-1 overflow-y-auto cursor-text bg-surface transition-colors" onclick="document.getElementById('mainEditor').focus()">
                 <div id="mainEditor" class="main-editor w-full py-8 px-8 text-lg leading-loose text-content outline-none min-h-full font-sans" contenteditable="true" 
-                    placeholder="💡 自由写作区：在这里撰写文章、日记或笔记..."
+                    placeholder="💡 点击此处开始写作..."
                     oninput="handleEditorInput()"
                     ondragover="allowEditorDrop(event)"
                     ondragleave="leaveEditorDrop(event)"
@@ -212,10 +279,10 @@
         </div>
         <div id="emptyState" class="flex flex-col items-center justify-center h-full text-center p-8 bg-base/50 transition-colors">
             <div class="w-24 h-24 bg-surface rounded-3xl flex items-center justify-center mb-6 text-primary shadow-lg border border-gray-200 transition-colors">
-                <svg class="w-12 h-12 opacity-80" viewBox="0 0 24 24" fill="currentColor"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                <svg class="w-12 h-12 opacity-80" viewBox="0 0 24 24" fill="currentColor"><path d="M14.06,9.02l0.92-0.92L15.92,9l-0.92,0.92L14.06,9.02 M13.71,9.37l-0.92,0.92L13.73,11l0.92-0.92L13.71,9.37 M13,11.33 l0.92,0.92l0.92-0.92L13.92,10.41L13,11.33 M13.36,10.97l-0.92-0.92L11.5,11l0.92,0.92L13.36,10.97z M4,4h10v6h6v10H4V4z M14,5v4h4 V5H14z"/></svg>
             </div>
-            <h3 class="text-content font-bold text-xl mb-2 tracking-tight">准备好开始自由写作了吗？</h3>
-            <p class="text-muted text-sm">选择一个文件夹，让灵感流淌</p>
+            <h3 class="text-content font-bold text-xl mb-2 tracking-tight">准备好创作爆款了吗？</h3>
+            <p class="text-muted text-sm">在左侧选择一个选题，让灵感流淌</p>
         </div>
     </div>
 
@@ -235,70 +302,40 @@
         </div>
     </div>
 
-    <!-- Stats Modal (Enhanced) -->
+    <!-- Stats Modal -->
     <div id="statsModal" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center transition-opacity opacity-0">
-        <div class="bg-surface/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 w-[680px] border border-gray-100 transform scale-95 transition-all text-content max-h-[90vh] overflow-y-auto">
+        <div class="bg-surface/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 w-[600px] border border-gray-100 transform scale-95 transition-all text-content">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-extrabold flex items-center gap-2">
-                    <span class="text-primary">📊</span> 数据统计中心
+                    <span class="text-primary">📊</span> 创作数据中心
                 </h3>
                 <button onclick="closeStatsModal()" class="p-2 hover:bg-gray-100 rounded-full text-muted transition-colors">
                     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
-            
-            <!-- Key Metrics -->
-            <div class="grid grid-cols-3 gap-4 mb-6">
-                <div class="bg-base p-5 rounded-2xl border border-gray-200 flex flex-col items-center">
-                    <div class="text-xs text-muted font-bold uppercase mb-1">累计灵感</div>
-                    <div class="text-4xl font-black text-primary" id="statInspirations">0</div>
+            <div class="grid grid-cols-3 gap-4 mb-8">
+                <div class="bg-base p-4 rounded-2xl border border-gray-200">
+                    <div class="text-xs text-muted font-bold uppercase mb-1">累计选题</div>
+                    <div class="text-3xl font-black text-primary" id="statTopics">0</div>
                 </div>
-                <div class="bg-base p-5 rounded-2xl border border-gray-200 flex flex-col items-center">
-                    <div class="text-xs text-muted font-bold uppercase mb-1">累计文件夹</div>
-                    <div class="text-4xl font-black text-content" id="statFolders">0</div>
+                <div class="bg-base p-4 rounded-2xl border border-gray-200">
+                    <div class="text-xs text-muted font-bold uppercase mb-1">总字数</div>
+                    <div class="text-3xl font-black text-content" id="statWords">0</div>
                 </div>
-                <div class="bg-base p-5 rounded-2xl border border-gray-200 flex flex-col items-center">
-                    <div class="text-xs text-muted font-bold uppercase mb-1">本月创作</div>
-                    <div class="text-4xl font-black text-blue-500" id="statMonthlyDays">0 <span class="text-sm text-muted font-normal">天</span></div>
+                <div class="bg-base p-4 rounded-2xl border border-gray-200">
+                    <div class="text-xs text-muted font-bold uppercase mb-1">创作天数</div>
+                    <div class="text-3xl font-black text-blue-500" id="statDays">0</div>
                 </div>
             </div>
-
-            <!-- Heatmap -->
-            <div class="bg-base p-6 rounded-2xl border border-gray-200 mb-6">
-                <div class="flex justify-between items-end mb-4">
-                    <div class="text-sm font-bold text-content flex items-center gap-2">
-                        🔥 灵感热力图 
-                        <span class="text-xs font-normal text-muted bg-gray-200 px-2 py-0.5 rounded-md">过去365天</span>
-                    </div>
-                    <div class="text-xs text-muted flex items-center gap-1">
-                        Less 
-                        <span class="w-2.5 h-2.5 bg-gray-200 rounded-sm"></span> 
-                        <span class="w-2.5 h-2.5 bg-primary/40 rounded-sm"></span>
-                        <span class="w-2.5 h-2.5 bg-primary/70 rounded-sm"></span>
-                        <span class="w-2.5 h-2.5 bg-primary rounded-sm"></span> 
-                        More
-                    </div>
+            <div class="bg-base p-5 rounded-2xl border border-gray-200 mb-6">
+                <div class="flex justify-between items-end mb-3">
+                    <div class="text-sm font-bold text-content">灵感热力图</div>
+                    <div class="text-xs text-muted">Less <span class="inline-block w-2 h-2 bg-gray-200 rounded-sm"></span> <span class="inline-block w-2 h-2 bg-primary rounded-sm"></span> More</div>
                 </div>
-                <div class="heatmap-container" id="heatmapContainer">
-                    <!-- JS Injected -->
-                </div>
+                <div class="heatmap-grid overflow-x-auto pb-2" id="heatmapContainer" style="height: 100px;"></div>
             </div>
-
-            <!-- Time Stats -->
-            <div class="bg-base p-6 rounded-2xl border border-gray-200 mb-6">
-                <div class="text-sm font-bold text-content mb-4 flex items-center gap-2">
-                    ⏰ 写作时段分布
-                    <span class="text-xs font-normal text-muted">基于活跃记录</span>
-                </div>
-                <div class="chart-bar-container" id="timeStatsContainer">
-                    <!-- JS Injected -->
-                </div>
-            </div>
-            
             <div class="text-center">
-                <button onclick="closeStatsModal()" class="px-8 py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-xl transition-colors active:scale-95 text-sm">
-                    关闭面板
-                </button>
+                <button onclick="closeStatsModal()" class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-xl transition-colors active:scale-95 text-sm">关闭面板</button>
             </div>
         </div>
     </div>
@@ -334,8 +371,7 @@
             topics: [], 
             activeTopicId: null,
             settings: { themeIndex: 0, darkMode: false },
-            activityLog: {}, // "YYYY-MM-DD": count
-            timeStats: { 0:0, 1:0, 2:0, 3:0 } // 0:凌晨, 1:上午, 2:下午, 3:晚上
+            activityLog: {}
         };
 
         // --- 初始化 ---
@@ -370,7 +406,7 @@
             });
         };
 
-        // --- 核心样式逻辑 ---
+        // --- 核心样式逻辑 (Theme & Dark Mode) ---
         function updateBaseColors() {
             const root = document.documentElement;
             const theme = THEMES[appData.settings.themeIndex];
@@ -451,8 +487,12 @@
             });
         }
 
-        // --- Voice Recording ---
-        let recognition, mediaRecorder, audioChunks = [], tempTranscript = '', recordingStartTime = 0;
+        // --- Voice Recording Logic (Refined) ---
+        let recognition;
+        let mediaRecorder;
+        let audioChunks = [];
+        let tempTranscript = '';
+        let recordingStartTime = 0;
 
         function openRecordingModal() {
             const modal = document.getElementById('recordingModal');
@@ -460,6 +500,7 @@
             document.getElementById('recordingText').classList.remove("text-red-500");
             document.getElementById('stopRecBtn').innerText = "说完了，发送";
             document.getElementById('stopRecBtn').disabled = false;
+            
             modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); modal.children[0].classList.remove('scale-95'); modal.children[0].classList.add('scale-100'); }, 10);
             startRecordingProcess();
@@ -473,15 +514,18 @@
         }
 
         function stopRecording() {
+            // UI Feedback: Processing
             const btn = document.getElementById('stopRecBtn');
             btn.innerText = "处理中...";
             btn.disabled = true;
+            
+            // Intelligent Delay: Wait for final transcript
             setTimeout(() => {
                 stopRecordingProcess(true); 
                 const modal = document.getElementById('recordingModal');
                 modal.classList.add('opacity-0'); modal.children[0].classList.add('scale-95');
                 setTimeout(() => { modal.classList.add('hidden'); }, 200);
-            }, 800);
+            }, 800); // 800ms wait
         }
 
         async function startRecordingProcess() {
@@ -489,34 +533,58 @@
             recordingStartTime = Date.now();
             document.getElementById('recordingText').innerText = "正在聆听...";
             audioChunks = [];
+
             if ('webkitSpeechRecognition' in window) {
                 recognition = new webkitSpeechRecognition();
                 recognition.lang = 'zh-CN';
                 recognition.continuous = true;
                 recognition.interimResults = true;
+                
                 recognition.onresult = (event) => {
                     let allText = '';
-                    for (let i = 0; i < event.results.length; ++i) allText += event.results[i][0].transcript;
+                    for (let i = 0; i < event.results.length; ++i) {
+                        allText += event.results[i][0].transcript;
+                    }
                     tempTranscript = allText;
                     document.getElementById('recordingText').innerText = tempTranscript || "正在聆听...";
                 };
+                
+                // ERROR HANDLING
                 recognition.onerror = (event) => {
-                    console.warn("Speech Error:", event.error);
+                    console.warn("Speech Recognition Error:", event.error); // Warn instead of error
                     const txt = document.getElementById('recordingText');
                     txt.classList.add("text-red-500");
-                    if(event.error === 'network') { txt.innerText = "转文字失败(网络不通)，录音仍可保存"; tempTranscript = "（语音转文字失败：网络连接问题）"; }
-                    else if(event.error === 'not-allowed') { txt.innerText = "无法识别：请允许麦克风权限"; tempTranscript = "（语音转文字失败：麦克风权限）"; }
-                    else if(event.error !== 'no-speech') { txt.innerText = "识别错误: " + event.error; tempTranscript = "（语音转文字失败：" + event.error + "）"; }
+                    if(event.error === 'network') {
+                        txt.innerText = "转文字失败(网络不通)，录音仍可保存";
+                        tempTranscript = "（语音转文字失败：网络连接问题）";
+                    }
+                    else if(event.error === 'not-allowed') {
+                         txt.innerText = "无法识别：请允许麦克风权限";
+                         tempTranscript = "（语音转文字失败：麦克风权限）";
+                    }
+                    else if(event.error === 'no-speech') {
+                        // mild warning
+                    }
+                    else {
+                        txt.innerText = "识别错误: " + event.error;
+                        tempTranscript = "（语音转文字失败：" + event.error + "）";
+                    }
                 };
+
                 recognition.start();
-            } else { document.getElementById('recordingText').innerText = "您的浏览器不支持语音识别 (建议使用 Chrome)"; }
+            } else {
+                document.getElementById('recordingText').innerText = "您的浏览器不支持语音识别 (建议使用 Chrome)";
+            }
 
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
                 mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
                 mediaRecorder.start();
-            } catch (err) { document.getElementById('recordingText').innerText = "无法访问麦克风，请检查权限"; }
+            } catch (err) {
+                console.error("Mic access denied", err);
+                document.getElementById('recordingText').innerText = "无法访问麦克风，请检查权限";
+            }
         }
 
         function stopRecordingProcess(shouldSave) {
@@ -530,49 +598,61 @@
                         const reader = new FileReader();
                         reader.readAsDataURL(audioBlob);
                         reader.onloadend = () => {
-                            appData.inbox.unshift({ id: Date.now(), content: tempTranscript || "（未识别到文字）", audio: reader.result, duration: duration, comments: [] });
-                            logActivity(); saveData(); renderInbox();
+                            const base64Audio = reader.result;
+                            appData.inbox.unshift({
+                                id: Date.now(),
+                                content: tempTranscript || "（未识别到文字）",
+                                audio: base64Audio,
+                                duration: duration,
+                                comments: []
+                            });
+                            logActivity();
+                            saveData();
+                            renderInbox();
                         };
                     };
                 }
             }
-            if (mediaRecorder && mediaRecorder.stream) mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            if (mediaRecorder && mediaRecorder.stream) {
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            }
         }
 
-        function playAudio(base64) { const audio = new Audio(base64); audio.play(); }
+        function playAudio(base64) {
+            const audio = new Audio(base64);
+            audio.play();
+        }
 
-        // --- Data & Logs ---
+
+        // --- Data & Activity Log ---
         function logActivity(amount = 1) {
             const today = new Date().toISOString().split('T')[0];
-            const hour = new Date().getHours();
             if (!appData.activityLog) appData.activityLog = {};
             if (!appData.activityLog[today]) appData.activityLog[today] = 0;
             appData.activityLog[today] += amount;
-
-            // Time segment logging
-            if (!appData.timeStats) appData.timeStats = { 0:0, 1:0, 2:0, 3:0 };
-            let segment = 0; // 0-6 凌晨
-            if (hour >= 6 && hour < 12) segment = 1; // 上午
-            else if (hour >= 12 && hour < 18) segment = 2; // 下午
-            else if (hour >= 18) segment = 3; // 晚上
-            appData.timeStats[segment] += amount;
-
             saveData();
         }
 
         function saveData() {
-            try { localStorage.setItem('redNoteStudioDataV4', JSON.stringify(appData)); updateInboxCount(); showSaveStatus(); } 
-            catch (e) { if (e.name === 'QuotaExceededError') alert("存储空间不足！请删除一些旧图片或长录音。"); }
+            try {
+                localStorage.setItem('redNoteStudioDataV4', JSON.stringify(appData));
+                updateInboxCount();
+                showSaveStatus();
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') alert("存储空间不足！请删除一些旧图片或长录音。");
+            }
         }
-        function showSaveStatus() { const el = document.getElementById('saveStatus'); el.classList.remove('opacity-0', 'save-indicator'); void el.offsetWidth; el.classList.add('save-indicator'); }
-        
+        function showSaveStatus() {
+            const el = document.getElementById('saveStatus');
+            el.classList.remove('opacity-0', 'save-indicator');
+            void el.offsetWidth; el.classList.add('save-indicator');
+        }
         function loadData() {
             const saved = localStorage.getItem('redNoteStudioDataV4');
             if (saved) {
                 appData = JSON.parse(saved);
                 if (!appData.settings) appData.settings = { themeIndex: 0, darkMode: false };
                 if (!appData.activityLog) appData.activityLog = {};
-                if (!appData.timeStats) appData.timeStats = { 0:0, 1:0, 2:0, 3:0 };
                 applyTheme(appData.settings.themeIndex);
             } else {
                 appData.inbox = [{id: 1, content: "💡 这是一个示例灵感。你可以粘贴文字、链接，甚至截图！\n如果是视频链接，我会自动生成播放器哦。", comments: []}];
@@ -614,7 +694,6 @@
                 }];
                 appData.settings = { themeIndex: 0, darkMode: false };
                 appData.activityLog = {};
-                appData.timeStats = { 0:0, 1:0, 2:0, 3:0 };
                 applyTheme(0);
             }
             updateInboxCount();
@@ -642,7 +721,6 @@
             document.getElementById('statMonthlyDays').innerHTML = `${monthlyDays} <span class="text-sm text-muted font-normal">天</span>`;
 
             renderHeatmap();
-            renderTimeStats();
         }
 
         function closeStatsModal() {
@@ -655,74 +733,27 @@
             const container = document.getElementById('heatmapContainer');
             container.innerHTML = '';
             
-            // Generate 52 weeks (cols) x 7 days (rows)
-            // To simplify, we just iterate 365 days and use flex wrap/column logic or grid.
-            // Better: Use CSS Grid with 53 cols and 7 rows.
-            
             const today = new Date();
-            const startDate = new Date();
-            startDate.setDate(today.getDate() - 364);
+            const oneYearAgo = new Date();
+            oneYearAgo.setFullYear(today.getFullYear() - 1);
             
-            // Create 53 columns (weeks)
-            for (let w = 0; w < 53; w++) {
-                const weekCol = document.createElement('div');
-                weekCol.className = 'heatmap-week';
+            for (let d = new Date(oneYearAgo); d <= today; d.setDate(d.getDate() + 1)) {
+                const dateStr = d.toISOString().split('T')[0];
+                const count = appData.activityLog[dateStr] || 0;
                 
-                for (let d = 0; d < 7; d++) {
-                    const currentDate = new Date(startDate);
-                    currentDate.setDate(startDate.getDate() + (w * 7) + d);
-                    
-                    if (currentDate > today) break;
-
-                    const dateStr = currentDate.toISOString().split('T')[0];
-                    const count = appData.activityLog[dateStr] || 0;
-                    
-                    const cell = document.createElement('div');
-                    cell.className = 'heatmap-cell';
-                    cell.title = `${dateStr}: ${count} 次活跃`;
-                    
-                    // Intensity color logic
-                    if (count === 0) cell.style.backgroundColor = 'var(--color-border)';
-                    else {
-                        // Base color with varying opacity/lightness is hard with just vars.
-                        // We will use opacity on the primary color.
-                        cell.style.backgroundColor = 'var(--color-primary)';
-                        if (count < 5) cell.style.opacity = '0.3';
-                        else if (count < 10) cell.style.opacity = '0.5';
-                        else if (count < 20) cell.style.opacity = '0.75';
-                        else cell.style.opacity = '1';
-                    }
-                    weekCol.appendChild(cell);
-                }
-                container.appendChild(weekCol);
+                const cell = document.createElement('div');
+                cell.className = 'heatmap-cell';
+                cell.title = `${dateStr}: ${count} 次活跃`;
+                
+                if (count === 0) cell.style.backgroundColor = 'var(--color-border)'; 
+                else if (count < 5) cell.style.backgroundColor = 'var(--color-primary-light)';
+                else if (count < 10) cell.style.backgroundColor = 'var(--color-primary)';
+                else cell.style.backgroundColor = 'var(--color-primary-hover)';
+                
+                if (count > 0) cell.style.opacity = Math.min(0.4 + (count * 0.1), 1);
+                
+                container.appendChild(cell);
             }
-        }
-
-        function renderTimeStats() {
-            const container = document.getElementById('timeStatsContainer');
-            container.innerHTML = '';
-            const labels = ["凌晨", "上午", "下午", "晚上"];
-            const data = [appData.timeStats[0], appData.timeStats[1], appData.timeStats[2], appData.timeStats[3]];
-            const maxVal = Math.max(...data, 1); // Avoid div by zero
-
-            data.forEach((val, idx) => {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'chart-bar-wrapper';
-                
-                const bar = document.createElement('div');
-                bar.className = 'chart-bar';
-                const heightPct = (val / maxVal) * 100;
-                bar.style.height = `${Math.max(heightPct, 5)}%`; // Min height for visibility
-                bar.title = `${val} 次活跃`;
-                
-                const label = document.createElement('div');
-                label.className = 'chart-label';
-                label.innerText = labels[idx];
-                
-                wrapper.appendChild(bar);
-                wrapper.appendChild(label);
-                container.appendChild(wrapper);
-            });
         }
 
         // --- Helper & Content ---
@@ -872,11 +903,17 @@
         function createItemElement(item, sourceType, sourceParentId = null) {
             const div = document.createElement('div'); div.className = 'group relative bg-surface p-4 rounded-xl border border-gray-200 shadow-card hover:shadow-card-hover hover:border-primary/30 transition-all duration-200 cursor-grab active:cursor-grabbing w-full max-w-full overflow-hidden'; div.draggable = true;
             const delBtn = document.createElement('button'); delBtn.className = 'absolute top-3 right-3 p-1 text-muted hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all z-10'; delBtn.innerHTML = `<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`; delBtn.onclick = (e) => deleteItem(e, sourceType, sourceParentId, item.id); div.appendChild(delBtn);
+            
+            // Audio Player (New)
             if (item.audio) {
-                const voiceMsg = document.createElement('div'); voiceMsg.className = 'voice-message'; const durationText = item.duration ? `${item.duration}"` : '';
+                const voiceMsg = document.createElement('div');
+                voiceMsg.className = 'voice-message';
+                const durationText = item.duration ? `${item.duration}"` : '';
                 voiceMsg.innerHTML = `<svg class="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> <span class="text-xs font-bold text-content">语音条 ${durationText}</span>`;
-                voiceMsg.onclick = () => playAudio(item.audio); div.appendChild(voiceMsg);
+                voiceMsg.onclick = () => playAudio(item.audio);
+                div.appendChild(voiceMsg);
             }
+
             const content = document.createElement('div'); content.className = 'text-sm text-content leading-relaxed break-words mb-3 pr-6'; content.innerHTML = formatContent(item.content); div.appendChild(content);
             const commentsContainer = document.createElement('div'); commentsContainer.className = 'relative pl-4 mt-4 pt-1 border-t border-dashed border-gray-200';
             const line = document.createElement('div'); line.className = 'absolute left-0 top-3 bottom-3 w-0.5 bg-gray-200 rounded-full opacity-50'; commentsContainer.appendChild(line);
@@ -952,7 +989,17 @@
         function dropToEditor(e) {
             e.preventDefault(); document.getElementById('mainEditor').classList.remove('drag-over-editor'); const raw = e.dataTransfer.getData('text/plain'); if(!raw) return;
             try {
-                const data = JSON.parse(raw); let item = findItem(data.sourceType, data.sourceParentId, data.itemId);
+                const data = JSON.parse(raw); let item = null;
+                // Move from Topic -> Editor
+                if (data.sourceType === 'topic') {
+                    const topic = appData.topics.find(t => t.id === data.sourceParentId);
+                    if (topic) { item = topic.items.find(i => i.id === data.itemId); }
+                }
+                // Move from Inbox -> Editor
+                else if (data.sourceType === 'inbox') {
+                    item = appData.inbox.find(i => i.id === data.itemId);
+                }
+
                 if (item) {
                     const commentsTxt = item.comments && item.comments.length ? ` <div style="color:#9ca3af; background-color:var(--bg-main); padding:8px 12px; border-radius:8px; font-size:0.9em; margin-top:8px;">💡 ${item.comments.map(c=>c.text).join('<br>')}</div>` : '';
                     let contentHtml = formatContent(item.content);
