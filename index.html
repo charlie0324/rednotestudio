@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>查理的小红书写作台 | Red Note Studio</title>
+    <!-- 引入 Google Fonts: VT323 (英数像素) 和 DotGothic16 (中文像素) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=VT323&display=swap" rel="stylesheet">
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: 'var(--color-primary)',
+                            hover: 'var(--color-primary-hover)',
+                            light: 'var(--color-primary-light)',
+                            bg: 'var(--color-primary-bg)'
+                        },
+                        // 语义化背景色
+                        base: 'var(--bg-main)',       // 页面大背景
+                        surface: 'var(--bg-surface)', // 卡片/侧栏背景
+                        'surface-hover': 'var(--bg-surface-hover)',
+                        
+                        // 语义化文字色
+                        content: 'var(--text-main)',  // 主要文字
+                        muted: 'var(--text-muted)',   // 次要文字
+                        title: 'var(--text-title-force)', // 强制标题色
+                        
+                        gray: {
+                            50: '#f9fafb',
+                            100: '#f3f4f6',
+                            200: 'var(--color-border)', // 动态边框色
+                            300: '#d1d5db',
+                            400: '#9ca3af',
+                            500: '#6b7280',
+                            600: '#4b5563',
+                            700: '#374151',
+                            800: '#1f2937',
+                        }
+                    },
+                    borderRadius: {
+                        'none': '0',
+                        'sm': 'calc(var(--radius) - 2px)',
+                        DEFAULT: 'var(--radius)',
+                        'md': 'var(--radius)',
+                        'lg': 'var(--radius)',
+                        'xl': 'calc(var(--radius) + 4px)',
+                        '2xl': 'calc(var(--radius) + 8px)',
+                        'full': '9999px', 
+                    },
+                    boxShadow: {
+                        'card': 'var(--shadow-card)',
+                        'card-hover': 'var(--shadow-card-hover)',
+                        'sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                        'md': '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    },
+                    fontFamily: {
+                        sans: ['var(--font-main)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+                    },
+                    borderWidth: {
+                        DEFAULT: 'var(--border-width)',
+                        '0': '0',
+                        '2': '2px',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* CSS 变量定义 */
+        :root {
+            /* --- 主题色 (由 JS 动态修改) --- */
+            --color-primary: #ff2442;
+            --color-primary-hover: #e0203a;
+            --color-primary-light: #ffe6e9;
+            --color-primary-bg: #fff0f2;
+            
+            /* --- 形状与材质 --- */
+            --radius: 12px;
+            --border-width: 1px;
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            --shadow-card: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+            --shadow-card-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+
+            /* --- 基础色 (初始占位，实际由 JS 接管) --- */
+            --bg-main: #f9fafb;
+            --bg-surface: #ffffff;
+            --bg-surface-hover: #f3f4f6;
+            --text-main: #000000;     /* 纯黑 */
+            --text-title-force: #000000; /* 强制标题纯黑 */
+            --text-muted: #4b5563;
+            --color-border: #e5e7eb;
+        }
+
+        /* 像素风特殊覆盖 */
+        .theme-pixel {
+            /* 统一使用 DotGothic16 字体 */
+            --font-main: 'DotGothic16', 'VT323', monospace; 
+            letter-spacing: 0.5px;
+        }
+
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: var(--radius); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+        
+        /* 拖拽状态样式 */
+        .dragging { opacity: 0.5; transform: scale(0.98); }
+        .drag-over { background-color: var(--color-primary-light) !important; border-color: var(--color-primary) !important; box-shadow: inset 0 0 0 2px var(--color-primary); }
+        .drag-over-editor { background-color: var(--color-primary-bg) !important; box-shadow: inset 0 0 0 2px var(--color-primary) !important; }
+        
+        /* 编辑器空状态 placeholder */
+        .main-editor:empty:before {
+            content: attr(placeholder);
+            color: var(--text-muted);
+            pointer-events: none;
+            display: block;
+        }
+
+        /* 保存状态动画 */
+        @keyframes fadeOut {
+            0% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-10px); }
+        }
+        .save-indicator {
+            animation: fadeOut 2.5s forwards;
+        }
+        
+        /* 链接样式 */
+        .linkified {
+            color: var(--color-primary);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+        .linkified:hover { opacity: 0.8; }
+
+        /* 选中文字颜色适配 */
+        ::selection {
+            background-color: var(--color-primary-light);
+            color: var(--color-primary);
+        }
+        
+        /* Modal 动画 */
+        .modal-enter { animation: modalIn 0.2s ease-out forwards; }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex bg-base text-content font-sans antialiased transition-colors duration-300">
+
+    <!-- 保存状态提示 -->
+    <div id="saveStatus" class="fixed top-4 right-4 z-[60] bg-surface border border-primary/20 text-primary px-4 py-2 rounded-lg shadow-lg text-sm font-bold flex items-center gap-2 opacity-0 pointer-events-none transform transition-all">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        已保存
+    </div>
+
+    <!-- 1. 素材库 (Inbox) -->
+    <div class="w-1/5 min-w-[260px] max-w-[320px] flex flex-col border-r border-gray-200 bg-surface/50 shrink-0 z-20 backdrop-blur-md transition-colors">
+        <!-- Header -->
+        <div class="h-14 flex items-center justify-between px-4 border-b border-gray-200 bg-surface/90 backdrop-blur-sm shrink-0 relative z-30 transition-colors">
+            <span class="font-extrabold text-content flex items-center gap-2 text-lg">
+                📥 收集
+                <span class="text-xs font-normal text-white bg-primary px-2 py-0.5 rounded-full shadow-sm" id="inboxCount">0</span>
+            </span>
+            
+            <div class="flex items-center gap-1">
+                <!-- Theme Picker -->
+                <div class="relative">
+                    <button id="themeToggleBtn" class="p-2 text-muted hover:text-primary hover:bg-primary-light rounded-lg transition-colors group" title="切换皮肤">
+                        <svg class="w-5 h-5 transition-transform group-hover:rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+                    </button>
+                    <div id="themeDropdown" class="absolute left-0 top-full mt-2 bg-surface border border-gray-200 rounded-xl shadow-2xl p-4 hidden z-50 w-64 animate-in fade-in zoom-in-95 duration-200">
+                        <div class="text-xs font-bold text-muted mb-3 uppercase tracking-wider">选择主题风格</div>
+                        <div id="themeContainer" class="grid grid-cols-3 gap-3"></div>
+                    </div>
+                </div>
+
+                <!-- Dark Mode Toggle -->
+                <button id="darkModeBtn" onclick="toggleDarkMode()" class="p-2 text-muted hover:text-primary hover:bg-primary-light rounded-lg transition-colors" title="切换深色模式">
+                    <svg id="iconSun" class="w-5 h-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg id="iconMoon" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+
+                <!-- Clear Inbox -->
+                <button onclick="showClearInboxModal()" class="p-2 text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="清空素材库">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- List -->
+        <div class="flex-1 overflow-y-auto p-3 space-y-3 bg-primary-bg/30 transition-colors" id="inboxList" ondragover="allowDrop(event)" ondrop="dropToInbox(event)">
+            <!-- Items -->
+        </div>
+
+        <!-- Input -->
+        <div class="p-4 border-t border-gray-200 bg-surface shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)] transition-colors">
+            <textarea id="quickInput" class="w-full h-24 p-3 text-sm border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all placeholder-muted bg-base text-content font-medium" placeholder="粘贴灵感、链接或截图(支持直接粘贴图片)..."></textarea>
+        </div>
+    </div>
+
+    <!-- 2. 大纲整理 (Organizer) -->
+    <div class="w-3/10 min-w-[320px] max-w-[450px] flex flex-col border-r border-gray-200 bg-surface shrink-0 z-10 relative transition-colors">
+        <div class="h-14 flex items-center justify-between px-4 border-b border-gray-200 bg-surface/95 shrink-0 transition-colors" id="organizerHeader">
+            <!-- Dynamic Header -->
+        </div>
+        <div class="flex-1 overflow-y-auto flex flex-col bg-base/50 transition-colors" id="organizerBody">
+            <!-- Dynamic Body -->
+        </div>
+    </div>
+
+    <!-- 3. 写作画布 (Editor) -->
+    <div class="flex-1 flex flex-col bg-surface min-w-[400px] relative transition-colors">
+        
+        <div id="editorWrapper" class="flex flex-col h-full hidden">
+            <!-- Toolbar -->
+            <div class="h-14 border-b border-gray-200 flex items-center px-4 gap-2 bg-surface shrink-0 shadow-sm z-20 transition-colors">
+                <!-- Format Tools -->
+                <div class="flex items-center bg-base p-1 rounded-lg mr-2 border border-gray-200">
+                    <button onclick="execCmd('bold')" class="p-1.5 rounded hover:bg-surface hover:shadow-sm text-muted hover:text-content transition-all font-bold" title="粗体">B</button>
+                    <button onclick="execCmd('italic')" class="p-1.5 rounded hover:bg-surface hover:shadow-sm text-muted hover:text-content transition-all italic" title="斜体">I</button>
+                </div>
+
+                <button onclick="insertOutline()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-muted bg-surface hover:bg-base hover:text-primary rounded-lg border border-gray-200 hover:border-primary/30 transition-all shadow-sm">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    插入大纲
+                </button>
+
+                <div class="ml-auto flex items-center gap-3">
+                    <span class="text-xs text-muted font-mono bg-base px-2 py-1 rounded" id="wordCount">0 字</span>
+                    
+                    <div class="relative group">
+                        <button id="exportBtn" class="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-white bg-primary hover:bg-primary-hover rounded-lg shadow-md hover:shadow-lg transition-all active:scale-95">
+                            导出
+                            <svg class="w-3.5 h-3.5 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        <div class="absolute right-0 top-full mt-2 w-40 bg-surface border border-gray-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right z-50">
+                            <a href="#" onclick="exportDoc('word')" class="block px-4 py-3 text-xs font-medium text-content hover:bg-base hover:text-primary first:rounded-t-xl transition-colors">📄 Word 文档 (.doc)</a>
+                            <a href="#" onclick="exportDoc('txt')" class="block px-4 py-3 text-xs font-medium text-content hover:bg-base hover:text-primary transition-colors">📝 纯文本 (.txt)</a>
+                            <div class="h-px bg-gray-200 my-0"></div>
+                            <a href="#" onclick="copyDraft()" class="block px-4 py-3 text-xs font-medium text-content hover:bg-base hover:text-primary last:rounded-b-xl transition-colors">📋 一键复制全文</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Title Bar -->
+            <div class="py-4 px-8 border-b border-gray-200 flex items-center shrink-0 bg-surface transition-colors">
+                <!-- 强制标题色 -->
+                <span id="activeTopicTitle" class="text-2xl font-extrabold truncate tracking-tight" style="color: var(--text-title-force);"></span>
+            </div>
+
+            <!-- Main Editor (已移除 font-serif) -->
+            <div class="flex-1 overflow-y-auto cursor-text bg-surface transition-colors" onclick="document.getElementById('mainEditor').focus()">
+                <div id="mainEditor" class="main-editor w-full py-8 px-8 text-lg leading-loose text-content outline-none min-h-full font-sans" contenteditable="true" 
+                    placeholder="💡 点击此处开始写作..."
+                    oninput="handleEditorInput()"
+                    ondragover="allowEditorDrop(event)"
+                    ondragleave="leaveEditorDrop(event)"
+                    ondrop="dropToEditor(event)">
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="flex flex-col items-center justify-center h-full text-center p-8 bg-base/50 transition-colors">
+            <div class="w-24 h-24 bg-surface rounded-3xl flex items-center justify-center mb-6 text-primary shadow-lg border border-gray-200 transition-colors">
+                <svg class="w-12 h-12 opacity-80" viewBox="0 0 24 24" fill="currentColor"><path d="M14.06,9.02l0.92-0.92L15.92,9l-0.92,0.92L14.06,9.02 M13.71,9.37l-0.92,0.92L13.73,11l0.92-0.92L13.71,9.37 M13,11.33 l0.92,0.92l0.92-0.92L13.92,10.41L13,11.33 M13.36,10.97l-0.92-0.92L11.5,11l0.92,0.92L13.36,10.97z M4,4h10v6h6v10H4V4z M14,5v4h4 V5H14z"/></svg>
+            </div>
+            <h3 class="text-content font-bold text-xl mb-2 tracking-tight">准备好创作爆款了吗？</h3>
+            <p class="text-muted text-sm">在左侧选择一个选题，开始写作</p>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modalOverlay" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center transition-opacity opacity-0">
+        <div id="modalContentBox" class="bg-surface rounded-2xl shadow-2xl p-6 w-[380px] transform scale-95 transition-all border border-gray-200">
+            <h3 id="modalTitle" class="text-xl font-bold text-content mb-3">标题</h3>
+            <div id="modalBody">
+                <p id="modalMsg" class="text-muted text-sm mb-5 leading-relaxed">内容</p>
+                <input type="text" id="modalInput" class="w-full px-4 py-3 border border-gray-200 bg-base text-content rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary mb-5 hidden" placeholder="输入...">
+            </div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeModal()" class="px-5 py-2.5 text-sm font-bold text-muted hover:bg-base rounded-xl transition-colors">取消</button>
+                <button id="modalConfirmBtn" class="px-5 py-2.5 text-sm font-bold text-white bg-primary hover:bg-primary-hover rounded-xl shadow-md shadow-primary/20 transition-all active:scale-95">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 皮肤配置 (高级定义) ---
+        const THEMES = [
+            { 
+                name: '经典红', 
+                id: 'red',
+                vars: {
+                    '--color-primary': '#ff2442',
+                    '--color-primary-hover': '#e0203a',
+                    '--color-primary-light': '#ffe6e9',
+                    '--color-primary-bg': '#fff0f2',
+                    '--radius': '12px',
+                    '--border-width': '1px',
+                    '--font-main': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial',
+                    '--shadow-card': '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03)',
+                    '--shadow-card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025)'
+                },
+                previewColor: '#ff2442'
+            },
+            { 
+                name: '深海蓝', 
+                id: 'blue',
+                vars: {
+                    '--color-primary': '#2563eb',
+                    '--color-primary-hover': '#1d4ed8',
+                    '--color-primary-light': '#eff6ff',
+                    '--color-primary-bg': '#f8fafc',
+                    '--radius': '8px',
+                    '--border-width': '1px',
+                    '--font-main': 'Inter, system-ui, sans-serif',
+                    '--shadow-card': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                    '--shadow-card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                },
+                previewColor: '#2563eb'
+            },
+            { 
+                name: '森林绿', 
+                id: 'green',
+                vars: {
+                    '--color-primary': '#059669',
+                    '--color-primary-hover': '#047857',
+                    '--color-primary-light': '#ecfdf5',
+                    '--color-primary-bg': '#f0fdf4',
+                    '--radius': '16px',
+                    '--border-width': '1px',
+                    '--font-main': 'system-ui, sans-serif',
+                    '--shadow-card': 'none',
+                    '--shadow-card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+                },
+                previewColor: '#059669'
+            },
+            { 
+                name: '极简白', 
+                id: 'mono',
+                vars: {
+                    '--color-primary': '#374151',
+                    '--color-primary-hover': '#111827',
+                    '--color-primary-light': '#f3f4f6',
+                    '--color-primary-bg': '#ffffff',
+                    '--radius': '6px',
+                    '--border-width': '1px',
+                    '--font-main': 'Georgia, serif',
+                    '--shadow-card': 'none',
+                    '--shadow-card-hover': 'inset 0 0 0 1px #e5e7eb'
+                },
+                previewColor: '#374151'
+            },
+            { 
+                name: '像素风', 
+                id: 'pixel',
+                vars: {
+                    '--color-primary': '#7c3aed',
+                    '--color-primary-hover': '#6d28d9',
+                    '--color-primary-light': '#ede9fe',
+                    '--color-primary-bg': '#f5f3ff',
+                    '--radius': '0px',
+                    '--border-width': '2px',
+                    '--font-main': '"DotGothic16", "VT323", monospace',
+                    '--shadow-card': '4px 4px 0px 0px #000000',
+                    '--shadow-card-hover': '6px 6px 0px 0px #000000'
+                },
+                previewColor: '#7c3aed',
+                isPixel: true
+            }
+        ];
+
+        // --- 核心数据 ---
+        let appData = {
+            inbox: [], 
+            topics: [], 
+            activeTopicId: null,
+            settings: { themeIndex: 0, darkMode: false } 
+        };
+
+        // --- 初始化 ---
+        window.onload = function() {
+            loadData();
+            renderInbox();
+            renderOrganizer();
+            renderEditor();
+            renderThemePicker(); 
+
+            document.getElementById('quickInput').addEventListener('paste', handlePaste);
+            document.getElementById('quickInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    addInboxItem();
+                }
+            });
+            document.getElementById('modalInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('modalConfirmBtn').click();
+                }
+            });
+
+            // 皮肤菜单
+            const themeBtn = document.getElementById('themeToggleBtn');
+            const themeDropdown = document.getElementById('themeDropdown');
+            themeBtn.addEventListener('click', (e) => { e.stopPropagation(); themeDropdown.classList.toggle('hidden'); });
+            window.addEventListener('click', (e) => {
+                if (!themeDropdown.classList.contains('hidden') && !themeDropdown.contains(e.target) && e.target !== themeBtn) {
+                    themeDropdown.classList.add('hidden');
+                }
+            });
+        };
+
+        // --- 核心样式逻辑 (Theme & Dark Mode) ---
+        function updateBaseColors() {
+            const root = document.documentElement;
+            const theme = THEMES[appData.settings.themeIndex];
+            const isDark = appData.settings.darkMode;
+            const isPixel = theme.isPixel;
+
+            if (isDark) { // Dark Mode
+                // Dark Mode Colors
+                root.style.setProperty('--bg-main', isPixel ? '#000000' : '#111827');       
+                root.style.setProperty('--bg-surface', isPixel ? '#111827' : '#1f2937');    
+                root.style.setProperty('--bg-surface-hover', isPixel ? '#1f2937' : '#374151'); 
+                root.style.setProperty('--text-main', '#ffffff');     
+                root.style.setProperty('--text-title-force', '#ffffff'); // 强制纯白
+                root.style.setProperty('--text-muted', '#d1d5db');    
+                root.style.setProperty('--color-border', '#374151');  
+                
+                // Pixel specific dark mode overrides
+                if (isPixel) {
+                    root.style.setProperty('--color-border', '#ffffff'); // White borders for contrast
+                    root.style.setProperty('--shadow-card', '4px 4px 0px 0px #6b7280');
+                    root.style.setProperty('--shadow-card-hover', '6px 6px 0px 0px #6b7280');
+                }
+
+                document.getElementById('iconSun').classList.remove('hidden');
+                document.getElementById('iconMoon').classList.add('hidden');
+            } else { // Light Mode
+                // Light Mode Colors (Default)
+                root.style.setProperty('--bg-main', '#f9fafb');
+                root.style.setProperty('--bg-surface', '#ffffff');
+                root.style.setProperty('--bg-surface-hover', '#f3f4f6');
+                root.style.setProperty('--text-main', '#000000');     
+                root.style.setProperty('--text-title-force', '#000000'); // 强制纯黑
+                root.style.setProperty('--text-muted', '#4b5563');    
+                root.style.setProperty('--color-border', '#e5e7eb');
+                
+                // Restore Pixel Light Defaults
+                if (isPixel) {
+                    root.style.setProperty('--color-border', '#000000'); // Black borders
+                    root.style.setProperty('--shadow-card', '4px 4px 0px 0px #000000');
+                    root.style.setProperty('--shadow-card-hover', '6px 6px 0px 0px #000000');
+                }
+
+                document.getElementById('iconSun').classList.add('hidden');
+                document.getElementById('iconMoon').classList.remove('hidden');
+            }
+
+            const darkBtn = document.getElementById('darkModeBtn');
+            darkBtn.classList.remove('opacity-30', 'cursor-not-allowed');
+            darkBtn.title = "切换深色模式";
+        }
+
+        function applyTheme(index) {
+            if (index < 0 || index >= THEMES.length) return;
+            const theme = THEMES[index];
+            const root = document.documentElement;
+            const body = document.body;
+
+            // 应用 Theme 变量
+            for (const [key, value] of Object.entries(theme.vars)) {
+                root.style.setProperty(key, value);
+            }
+            
+            if (theme.isPixel) body.classList.add('theme-pixel');
+            else body.classList.remove('theme-pixel');
+            
+            appData.settings.themeIndex = index;
+            
+            updateBaseColors(); 
+            saveData();
+            renderThemePicker();
+        }
+
+        function toggleDarkMode() {
+            appData.settings.darkMode = !appData.settings.darkMode;
+            updateBaseColors();
+            saveData();
+        }
+
+        function renderThemePicker() {
+            const container = document.getElementById('themeContainer');
+            container.innerHTML = '';
+            THEMES.forEach((theme, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = "flex flex-col items-center gap-1 cursor-pointer group";
+                wrapper.onclick = (e) => { e.stopPropagation(); applyTheme(index); };
+
+                const btn = document.createElement('div');
+                const isSelected = appData.settings.themeIndex === index;
+                btn.className = `w-10 h-10 rounded-full border-2 transition-all duration-200 flex items-center justify-center ${isSelected ? 'ring-2 ring-offset-2 ring-gray-400 scale-110 border-white' : 'border-gray-100 group-hover:scale-105'}`;
+                btn.style.backgroundColor = theme.previewColor;
+                
+                if (theme.isPixel) {
+                    btn.style.borderRadius = '0';
+                    btn.style.border = '2px solid black';
+                    btn.style.boxShadow = '2px 2px 0 black';
+                }
+                if(isSelected) {
+                    btn.innerHTML = `<svg class="w-5 h-5 text-white drop-shadow-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                }
+                const label = document.createElement('span');
+                label.innerText = theme.name;
+                label.className = `text-[10px] font-medium ${isSelected ? 'text-content' : 'text-muted group-hover:text-content'}`;
+                wrapper.appendChild(btn);
+                wrapper.appendChild(label);
+                container.appendChild(wrapper);
+            });
+        }
+
+        // --- 粘贴处理 ---
+        function handlePaste(e) {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let index in items) {
+                const item = items[index];
+                if (item.kind === 'file' && item.type.indexOf('image/') !== -1) {
+                    e.preventDefault(); 
+                    const blob = item.getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        compressImage(event.target.result, function(compressedDataUrl) {
+                            appData.inbox.unshift({ id: Date.now(), content: compressedDataUrl, comments: [] });
+                            saveData();
+                            renderInbox();
+                        });
+                    };
+                    reader.readAsDataURL(blob);
+                }
+            }
+        }
+
+        function compressImage(src, callback) {
+            const img = new Image();
+            img.src = src;
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const maxWidth = 600; 
+                let width = img.width;
+                let height = img.height;
+                if (width > maxWidth) {
+                    height = Math.round(height * (maxWidth / width));
+                    width = maxWidth;
+                }
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                callback(canvas.toDataURL('image/jpeg', 0.7));
+            }
+        }
+
+        // --- 数据持久化 ---
+        function saveData() {
+            try {
+                localStorage.setItem('redNoteStudioDataV4', JSON.stringify(appData));
+                updateInboxCount();
+                showSaveStatus();
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') alert("存储空间不足！请删除一些旧图片。");
+            }
+        }
+        function showSaveStatus() {
+            const el = document.getElementById('saveStatus');
+            el.classList.remove('opacity-0', 'save-indicator');
+            void el.offsetWidth;
+            el.classList.add('save-indicator');
+        }
+        function loadData() {
+            const saved = localStorage.getItem('redNoteStudioDataV4');
+            if (saved) {
+                appData = JSON.parse(saved);
+                if (!appData.settings) appData.settings = { themeIndex: 0, darkMode: false };
+                applyTheme(appData.settings.themeIndex);
+            } else {
+                appData.inbox = [{id: 1, content: "示例灵感：拖拽我到右边", comments: []}];
+                appData.topics = [{
+                    id: 101, title: "👋 欢迎使用 Red Note Studio", 
+                    items: [{id: 2, content: "点击下方的批注文字可以进行重新编辑", comments: [{text: "我是可编辑的批注"}]}],
+                    draft: "<b>欢迎！</b><div><br></div><div>点击右上角月亮图标试试深色模式 🌙</div>"
+                }];
+                appData.settings = { themeIndex: 0, darkMode: false };
+                applyTheme(0);
+            }
+            updateInboxCount();
+        }
+        function updateInboxCount() { document.getElementById('inboxCount').innerText = appData.inbox.length; }
+
+        // --- Inbox Logic ---
+        function renderInbox() {
+            const list = document.getElementById('inboxList');
+            list.innerHTML = '';
+            appData.inbox.forEach(item => list.appendChild(createItemElement(item, 'inbox')));
+            updateInboxCount();
+        }
+        function addInboxItem() {
+            const input = document.getElementById('quickInput');
+            const content = input.value.trim();
+            if (!content) return;
+            appData.inbox.unshift({ id: Date.now(), content: content, comments: [] }); 
+            input.value = ''; saveData(); renderInbox();
+        }
+
+        // --- Helper ---
+        function formatContent(content) {
+            if (content.startsWith('data:image')) {
+                return `<img src="${content}" class="w-full h-auto max-h-[300px] object-contain rounded-lg border border-gray-200 hover:opacity-95 transition-opacity bg-base">`;
+            }
+            let safeContent = content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+            return safeContent.replace(/(https?:\/\/[^\s]+)/g, url => `<a href="${url}" target="_blank" class="linkified hover:underline break-all" onclick="event.stopPropagation()">${url}</a>`);
+        }
+
+        // --- Organizer Logic ---
+        function renderOrganizer() {
+            const header = document.getElementById('organizerHeader');
+            const body = document.getElementById('organizerBody');
+            header.innerHTML = ''; body.innerHTML = '';
+
+            if (appData.activeTopicId === null) {
+                // List View
+                header.innerHTML = `
+                    <span class="font-extrabold text-content text-lg">🗂️ 选题目录</span>
+                    <button onclick="toggleNewTopicInput()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-primary hover:bg-primary-hover rounded-lg shadow-sm transition-all active:scale-95">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        新建
+                    </button>
+                `;
+                const container = document.createElement('div');
+                container.className = 'p-4 space-y-3';
+                const inputDiv = document.createElement('div');
+                inputDiv.id = 'newTopicInputDiv'; 
+                inputDiv.className = 'hidden mb-3';
+                inputDiv.innerHTML = `<input type="text" id="newTopicInput" class="w-full px-4 py-3 border border-primary bg-base text-content font-medium rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm" placeholder="输入选题名称，回车创建..." onkeydown="handleNewTopic(event)">`;
+                container.appendChild(inputDiv);
+
+                appData.topics.forEach(topic => {
+                    const row = document.createElement('div');
+                    row.className = 'group bg-surface p-5 rounded-2xl border border-gray-200 shadow-card hover:shadow-card-hover hover:border-primary/40 cursor-pointer transition-all duration-200 flex justify-between items-center';
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'flex-1';
+                    infoDiv.onclick = () => enterTopic(topic.id);
+                    const title = document.createElement('div');
+                    // 强制应用颜色变量
+                    title.className = 'font-extrabold text-base transition-colors';
+                    title.style.color = 'var(--text-title-force)';
+                    title.innerText = topic.title;
+                    const meta = document.createElement('div');
+                    meta.className = 'text-xs text-muted mt-1.5 flex items-center gap-2';
+                    meta.innerHTML = `<span class="bg-base px-2 py-0.5 rounded-md font-medium text-muted">${topic.items.length} 灵感</span> ${topic.draft ? '<span class="text-green-600 bg-green-50/50 px-2 py-0.5 rounded-md font-medium">📝 草稿</span>' : ''}`;
+                    infoDiv.append(title, meta);
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.className = 'flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity';
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'p-2 text-muted hover:text-content hover:bg-base rounded-lg transition-colors';
+                    editBtn.innerHTML = `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+                    editBtn.onclick = (e) => { e.stopPropagation(); renameTopic(topic.id); };
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'p-2 text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors';
+                    delBtn.innerHTML = `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+                    delBtn.onclick = (e) => showDeleteTopicModal(e, topic.id);
+                    actionsDiv.append(editBtn, delBtn);
+                    row.append(infoDiv, actionsDiv);
+                    container.appendChild(row);
+                });
+                body.appendChild(container);
+            } else {
+                // Detail View
+                const topic = appData.topics.find(t => t.id === appData.activeTopicId);
+                if (!topic) { appData.activeTopicId = null; renderOrganizer(); return; }
+                header.innerHTML = `
+                    <div class="flex items-center gap-3 flex-1 w-full">
+                        <button onclick="exitTopic()" class="p-2 -ml-2 text-muted hover:bg-base rounded-lg transition-colors group" title="返回">
+                            <svg class="w-5 h-5 transition-transform group-hover:-translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        </button>
+                        <input class="flex-1 min-w-0 bg-transparent text-base font-extrabold placeholder-muted focus:outline-none hover:bg-base focus:bg-surface focus:ring-2 focus:ring-primary/20 rounded-lg px-2 py-1 transition-all" 
+                            style="color: var(--text-title-force);"
+                            value="${topic.title}" placeholder="输入选题标题..." onchange="updateTopicTitle(${topic.id}, this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+                    </div>
+                `;
+                const dropZone = document.createElement('div');
+                dropZone.className = 'flex-1 min-h-full p-4 bg-base space-y-4 transition-colors'; 
+                dropZone.setAttribute('ondragover', 'allowDrop(event)');
+                dropZone.setAttribute('ondragleave', 'leaveDrop(event)');
+                dropZone.setAttribute('ondrop', `dropToTopic(event, ${topic.id})`);
+                if (topic.items.length === 0) {
+                    dropZone.innerHTML = `
+                        <div class="border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center mt-12 pointer-events-none opacity-60">
+                            <p class="text-3xl mb-2">🤲</p>
+                            <p class="text-muted text-sm font-medium">把左边的灵感拖进来吧</p>
+                        </div>`;
+                } else {
+                    topic.items.forEach(item => dropZone.appendChild(createItemElement(item, 'topic', topic.id)));
+                }
+                body.appendChild(dropZone);
+            }
+            renderEditor();
+        }
+
+        // --- Logic Functions ---
+        function enterTopic(id) { appData.activeTopicId = id; renderOrganizer(); }
+        function exitTopic() { appData.activeTopicId = null; renderOrganizer(); }
+        function toggleNewTopicInput() { 
+            const d = document.getElementById('newTopicInputDiv'); 
+            d.classList.toggle('hidden');
+            if(!d.classList.contains('hidden')) document.getElementById('newTopicInput').focus();
+        }
+        function handleNewTopic(e) {
+            if (e.key === 'Enter' && e.target.value.trim()) {
+                const newTopic = { id: Date.now(), title: e.target.value.trim(), items: [], draft: '' };
+                appData.topics.unshift(newTopic);
+                saveData();
+                enterTopic(newTopic.id);
+            }
+        }
+        function renameTopic(id) {
+            const topic = appData.topics.find(t => t.id === id);
+            showPromptModal("修改选题名称", topic.title, (newName) => {
+                if (newName && newName.trim()) { updateTopicTitle(id, newName); renderOrganizer(); }
+            });
+        }
+        function updateTopicTitle(id, newTitle) {
+            const topic = appData.topics.find(t => t.id === id);
+            if (newTitle.trim()) { 
+                topic.title = newTitle.trim(); saveData(); 
+                if(document.getElementById('activeTopicTitle') && appData.activeTopicId === id) document.getElementById('activeTopicTitle').innerText = topic.title;
+            }
+        }
+        function updateComment(type, parentId, itemId, commentIdx, newText) {
+            let item = findItem(type, parentId, itemId);
+            if (item && item.comments[commentIdx]) {
+                item.comments[commentIdx].text = newText; saveData(); type === 'inbox' ? renderInbox() : renderOrganizer();
+            }
+        }
+
+        function createItemElement(item, sourceType, sourceParentId = null) {
+            const div = document.createElement('div');
+            div.className = 'group relative bg-surface p-4 rounded-xl border border-gray-200 shadow-card hover:shadow-card-hover hover:border-primary/30 transition-all duration-200 cursor-grab active:cursor-grabbing';
+            div.draggable = true;
+            const delBtn = document.createElement('button');
+            delBtn.className = 'absolute top-3 right-3 p-1 text-muted hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all z-10';
+            delBtn.innerHTML = `<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+            delBtn.onclick = (e) => deleteItem(e, sourceType, sourceParentId, item.id);
+            div.appendChild(delBtn);
+            const content = document.createElement('div');
+            content.className = 'text-sm text-content leading-relaxed break-words mb-3 pr-6';
+            content.innerHTML = formatContent(item.content); 
+            div.appendChild(content);
+            const commentsContainer = document.createElement('div');
+            commentsContainer.className = 'relative pl-4 mt-4 pt-1 border-t border-dashed border-gray-200';
+            const line = document.createElement('div');
+            line.className = 'absolute left-0 top-3 bottom-3 w-0.5 bg-gray-200 rounded-full opacity-50';
+            commentsContainer.appendChild(line);
+            if (item.comments && item.comments.length > 0) {
+                item.comments.forEach((c, idx) => {
+                    const bubble = document.createElement('div');
+                    bubble.className = 'relative text-xs font-medium text-muted bg-base hover:bg-primary-light/30 p-2.5 rounded-lg mb-2.5 ml-2 border border-transparent hover:border-primary/10 transition-colors group/comment';
+                    const dot = document.createElement('div');
+                    dot.className = 'absolute -left-[14px] top-3.5 w-2 h-2 rounded-full bg-gray-300 group-hover/comment:bg-primary ring-2 ring-surface transition-colors';
+                    bubble.appendChild(dot);
+                    const textSpan = document.createElement('span');
+                    textSpan.innerText = c.text;
+                    textSpan.className = "cursor-text block leading-snug";
+                    textSpan.title = "点击重新编辑";
+                    textSpan.onclick = (e) => {
+                        e.stopPropagation(); 
+                        const input = document.createElement('input');
+                        input.type = 'text'; input.value = c.text;
+                        input.className = 'w-full text-xs bg-surface text-content border border-primary/30 rounded px-1.5 py-0.5 focus:outline-none focus:ring-2 focus:ring-primary/20';
+                        input.onclick = (ev) => ev.stopPropagation();
+                        const saveEdit = () => {
+                            const val = input.value.trim();
+                            if (val && val !== c.text) updateComment(sourceType, sourceParentId, item.id, idx, val);
+                            else sourceType === 'inbox' ? renderInbox() : renderOrganizer();
+                        };
+                        input.onblur = saveEdit; input.onkeydown = (ev) => { if(ev.key === 'Enter') saveEdit(); };
+                        textSpan.replaceWith(input); input.focus();
+                    };
+                    bubble.appendChild(textSpan);
+                    const delCom = document.createElement('button');
+                    delCom.className = 'absolute -top-1.5 -right-1.5 bg-surface shadow-sm border border-gray-100 rounded-full w-4 h-4 flex items-center justify-center text-muted hover:text-red-500 opacity-0 group-hover/comment:opacity-100 transition-opacity';
+                    delCom.innerHTML = '×';
+                    delCom.onclick = (e) => deleteComment(e, sourceType, sourceParentId, item.id, idx);
+                    bubble.appendChild(delCom);
+                    commentsContainer.appendChild(bubble);
+                });
+            }
+            const inputWrapper = document.createElement('div');
+            inputWrapper.className = 'relative ml-2';
+            const inputDot = document.createElement('div');
+            inputDot.className = 'absolute -left-[14px] top-3.5 w-2 h-2 rounded-full bg-primary/20 ring-2 ring-surface';
+            inputWrapper.appendChild(inputDot);
+            const input = document.createElement('input');
+            input.className = 'w-full text-xs bg-base text-content border border-transparent focus:bg-surface focus:border-primary/30 focus:ring-2 focus:ring-primary/10 rounded-lg py-2 px-3 transition-all placeholder-muted';
+            input.placeholder = "添加批注...";
+            input.onkeydown = (e) => handleCommentInput(e, sourceType, sourceParentId, item.id);
+            inputWrapper.appendChild(input);
+            commentsContainer.appendChild(inputWrapper);
+            div.appendChild(commentsContainer);
+            div.addEventListener('dragstart', (e) => {
+                e.target.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', JSON.stringify({ itemId: item.id, sourceType, sourceParentId }));
+            });
+            div.addEventListener('dragend', (e) => {
+                e.target.classList.remove('dragging');
+                document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            });
+            return div;
+        }
+
+        function handleCommentInput(e, type, parentId, itemId) {
+            if (e.key === 'Enter' && e.target.value.trim()) {
+                let item = findItem(type, parentId, itemId);
+                if (item) { item.comments.push({ text: e.target.value.trim() }); saveData(); type === 'inbox' ? renderInbox() : renderOrganizer(); }
+            }
+        }
+        function deleteComment(e, type, parentId, itemId, commentIdx) {
+            e.stopPropagation(); let item = findItem(type, parentId, itemId);
+            if (item) { item.comments.splice(commentIdx, 1); saveData(); type === 'inbox' ? renderInbox() : renderOrganizer(); }
+        }
+        function findItem(type, parentId, itemId) {
+            if (type === 'inbox') return appData.inbox.find(i => i.id === itemId);
+            const topic = appData.topics.find(t => t.id === parentId);
+            return topic ? topic.items.find(i => i.id === itemId) : null;
+        }
+        function deleteItem(e, type, pid, id) {
+            e.stopPropagation();
+            if (type === 'inbox') appData.inbox = appData.inbox.filter(i => i.id !== id);
+            else { const t = appData.topics.find(x => x.id === pid); if(t) t.items = t.items.filter(i => i.id !== id); }
+            saveData(); renderInbox(); renderOrganizer();
+        }
+        function allowDrop(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+        function leaveDrop(e) { e.currentTarget.classList.remove('drag-over'); }
+        function dropToInbox(e) { e.preventDefault(); }
+        function dropToTopic(e, targetTopicId) {
+            e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+            const raw = e.dataTransfer.getData('text/plain'); if(!raw) return;
+            try {
+                const data = JSON.parse(raw); let item = null;
+                if (data.sourceType === 'inbox') {
+                    const idx = appData.inbox.findIndex(i => i.id === data.itemId);
+                    if (idx > -1) { item = appData.inbox[idx]; appData.inbox.splice(idx, 1); }
+                } else {
+                    const srcTopic = appData.topics.find(t => t.id === data.sourceParentId);
+                    if (srcTopic) {
+                        const idx = srcTopic.items.findIndex(i => i.id === data.itemId);
+                        if (idx > -1) { item = srcTopic.items[idx]; srcTopic.items.splice(idx, 1); }
+                    }
+                }
+                if (item) { const target = appData.topics.find(t => t.id === targetTopicId); if (target) target.items.push(item); saveData(); renderInbox(); renderOrganizer(); }
+            } catch(err) {}
+        }
+
+        // --- Editor Logic ---
+        function renderEditor() {
+            const wrapper = document.getElementById('editorWrapper');
+            const empty = document.getElementById('emptyState');
+            const editor = document.getElementById('mainEditor');
+            const editorTitle = document.getElementById('activeTopicTitle');
+            const wordCount = document.getElementById('wordCount');
+            if (!appData.activeTopicId) { wrapper.classList.add('hidden'); empty.classList.remove('hidden'); return; }
+            const topic = appData.topics.find(t => t.id === appData.activeTopicId);
+            if (!topic) { appData.activeTopicId = null; renderOrganizer(); return; }
+            wrapper.classList.remove('hidden'); empty.classList.add('hidden');
+            editorTitle.innerText = topic.title;
+            if (editor.innerHTML !== topic.draft) editor.innerHTML = topic.draft || '';
+            updateWordCount();
+        }
+        function handleEditorInput() {
+            const editor = document.getElementById('mainEditor'); const topic = appData.topics.find(t => t.id === appData.activeTopicId);
+            if (topic) { topic.draft = editor.innerHTML; updateWordCount(); saveData(); }
+        }
+        function updateWordCount() {
+            const text = document.getElementById('mainEditor').innerText || "";
+            document.getElementById('wordCount').innerText = text.replace(/\s/g, '').length + ' 字';
+        }
+        function execCmd(command) { document.execCommand(command, false, null); document.getElementById('mainEditor').focus(); }
+        function insertOutline() {
+            const topic = appData.topics.find(t => t.id === appData.activeTopicId); if (!topic) return;
+            let html = "<br><hr class='my-6 border-gray-200'><h3 class='font-bold text-xl mb-4 text-content'>📌 灵感素材大纲</h3>";
+            topic.items.forEach((item, idx) => {
+                let contentHtml = formatContent(item.content);
+                html += `<div class='mb-4'><b class='text-primary mr-2'>${idx+1}.</b><span class="text-content">${contentHtml}</span></div>`;
+                if (item.comments && item.comments.length) html += `<blockquote class='border-l-4 border-gray-200 pl-4 py-1 ml-4 text-muted text-base mb-6 bg-base rounded-r-lg'>${item.comments.map(c=>c.text).join('<br>')}</blockquote>`;
+            });
+            html += "<hr class='my-6 border-gray-200'><br>";
+            document.getElementById('mainEditor').focus(); document.execCommand('insertHTML', false, html); handleEditorInput();
+        }
+        function allowEditorDrop(e) { e.preventDefault(); document.getElementById('mainEditor').classList.add('drag-over-editor'); }
+        function leaveEditorDrop(e) { document.getElementById('mainEditor').classList.remove('drag-over-editor'); }
+        function dropToEditor(e) {
+            e.preventDefault(); document.getElementById('mainEditor').classList.remove('drag-over-editor');
+            const raw = e.dataTransfer.getData('text/plain'); if(!raw) return;
+            try {
+                const data = JSON.parse(raw); let item = findItem(data.sourceType, data.sourceParentId, data.itemId);
+                if (item) {
+                    const commentsTxt = item.comments && item.comments.length ? ` <div style="color:#9ca3af; background-color:var(--bg-main); padding:8px 12px; border-radius:8px; font-size:0.9em; margin-top:8px;">💡 ${item.comments.map(c=>c.text).join('<br>')}</div>` : '';
+                    let contentHtml = formatContent(item.content);
+                    const html = `<div style="margin: 16px 0; padding: 16px; background: var(--bg-surface); border: 1px solid var(--color-border); border-left: 4px solid var(--color-primary); border-radius: 8px; color: var(--text-main); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">${contentHtml}${commentsTxt}</div><br>`;
+                    if (document.caretRangeFromPoint) { const range = document.caretRangeFromPoint(e.clientX, e.clientY); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); }
+                    document.execCommand('insertHTML', false, html); handleEditorInput();
+                }
+            } catch(e) {}
+        }
+        function exportDoc(type) {
+            const topic = appData.topics.find(t => t.id === appData.activeTopicId); if (!topic) { alert("请先选择一个选题"); return; }
+            let content, mime, ext;
+            if (type === 'word') {
+                const html = `
+                    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'>
+                    <head><meta charset='utf-8'><title>${topic.title}</title></head>
+                    <body><h1 style="font-size:24px; color:#333;">${topic.title}</h1>${topic.draft || ''}</body></html>`;
+                content = html; mime = 'application/msword;charset=utf-8'; ext = 'doc';
+            } else { content = document.getElementById('mainEditor').innerText; mime = 'text/plain;charset=utf-8'; ext = 'txt'; }
+            const blob = new Blob([content], { type: mime }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${topic.title}.${ext}`; document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+        }
+        function copyDraft() {
+            const text = document.getElementById('mainEditor').innerText; const textArea = document.createElement("textarea"); textArea.value = text; textArea.style.position = "fixed"; document.body.appendChild(textArea); textArea.focus(); textArea.select();
+            try { if (document.execCommand('copy')) showCopyFeedback(); else alert("复制失败"); } catch (err) { alert("复制失败"); } document.body.removeChild(textArea);
+        }
+        function showCopyFeedback() {
+             const btn = document.getElementById('exportBtn'); if(btn) { const oldHtml = btn.innerHTML; btn.innerHTML = "✅ 已复制"; btn.classList.remove('bg-primary', 'hover:bg-primary-hover'); btn.classList.add('bg-green-500', 'hover:bg-green-600'); setTimeout(() => { btn.innerHTML = oldHtml; btn.classList.remove('bg-green-500', 'hover:bg-green-600'); btn.classList.add('bg-primary', 'hover:bg-primary-hover'); }, 2000); }
+        }
+        function showModal(t, m, hasInput, cb) {
+            document.getElementById('modalTitle').innerText = t; document.getElementById('modalMsg').innerText = m; const input = document.getElementById('modalInput');
+            if (hasInput) { input.classList.remove('hidden'); input.value = hasInput === true ? '' : hasInput; } else input.classList.add('hidden');
+            const overlay = document.getElementById('modalOverlay'); const contentBox = document.getElementById('modalContentBox'); overlay.classList.remove('hidden');
+            setTimeout(() => { overlay.classList.remove('opacity-0'); contentBox.classList.remove('scale-95'); contentBox.classList.add('scale-100'); if(hasInput) input.focus(); }, 10);
+            confirmCallback = () => { cb(hasInput ? input.value : null); };
+        }
+        function closeModal() {
+            const overlay = document.getElementById('modalOverlay'); const contentBox = document.getElementById('modalContentBox');
+            overlay.classList.add('opacity-0'); contentBox.classList.remove('scale-100'); contentBox.classList.add('scale-95');
+            setTimeout(() => { overlay.classList.add('hidden'); document.getElementById('modalInput').value = ''; confirmCallback = null; }, 200);
+        }
+        let confirmCallback = null;
+        document.getElementById('modalConfirmBtn').onclick = () => { if(confirmCallback) confirmCallback(); closeModal(); };
+        function showPromptModal(t, val, cb) { showModal(t, "", val, cb); }
+        function showClearInboxModal() { showModal("清空素材库", "确定要清空吗？此操作无法撤销。", false, () => { appData.inbox = []; saveData(); renderInbox(); }); }
+        function showDeleteTopicModal(e, id) { e.stopPropagation(); showModal("删除选题", "确定要删除吗？", false, () => { appData.topics = appData.topics.filter(t=>t.id!==id); if(appData.activeTopicId===id) appData.activeTopicId=null; saveData(); renderOrganizer(); }); }
+    </script>
+</body>
+</html>
